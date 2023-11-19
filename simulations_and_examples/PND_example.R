@@ -1,6 +1,13 @@
 
-
 load("covariates_data.RData")
+
+
+# package for implementing the estimators
+library(devtools)
+install_github("xliu12/Cluster-specific-Treatment-Effects-in-PNDs/PND.heter.cluster")
+library(PND.heter.cluster)
+# the R function information
+?cluster.specific.ate
 
 
 # List the covariates
