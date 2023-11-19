@@ -36,17 +36,21 @@ the estimator (v) triply-robust (dml) is implemented with the double machine lea
 Estimation of the cluster-specific treatment effects in the partially nested design
 }
 \examples{
- gen_data <- Gen_Data(seed = seedone, J = 40, sample_size = 1600)
- data_in <- gen_data$datobs
- Xnames <- c(grep("X_dat", colnames(data_in), value = T))
+ data(data_in)
+ data_in <- data_in
+ Xnames <- c(grep("X_dat", colnames(data_in), value = TRUE))
 
- estimates_ate_K <- cluster.specific.ate(
- data_in = data_in,
- Xnames = Xnames,
- estimator = c("trt-cluster", "trt-y", "cluster-y", "triply-robust (linear)", "triply-robust (dml)"),
-  y1model_lme = FALSE,
-  randomized.tt = FALSE, randomized.tt.prop = NULL
-  )
+ # estimates_ate_K <- cluster.specific.ate(
+ # data_in = data_in,
+ # Xnames = Xnames,
+ # estimator = c("trt-cluster",
+ # "trt-y",
+ # "cluster-y",
+ # "triply-robust (linear)",
+ # "triply-robust (dml)"),
+ # y1model_lme = FALSE,
+ # randomized.tt = FALSE, randomized.ttprop = NULL
+ # )
 
 
 }
