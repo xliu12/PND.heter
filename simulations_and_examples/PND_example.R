@@ -3,8 +3,8 @@ load("covariates_data.RData")
 
 
 # install or download the package for implementing the estimators
-# library(devtools)
-# install_github("xliu12/PND.heter/PND.heter.cluster")
+library(devtools)
+install_github("xliu12/PND.heter/PND.hetercluster")
 library(PND.heter.cluster)
 # the R function information
 ?cluster.specific.ate
