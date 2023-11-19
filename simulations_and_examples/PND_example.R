@@ -2,9 +2,9 @@
 load("covariates_data.RData")
 
 
-# package for implementing the estimators
-library(devtools)
-install_github("xliu12/Cluster-specific-Treatment-Effects-in-PNDs/PND.heter.cluster")
+# install or download the package for implementing the estimators
+# library(devtools)
+# install_github("xliu12/PND.heter/PND.heter.cluster")
 library(PND.heter.cluster)
 # the R function information
 ?cluster.specific.ate
@@ -40,6 +40,17 @@ covariateNames <- c(#student-level covariates:
 
 # simulate treatment assignment, cluster assignment, outcome given the covariates
 # using data-generation models similar to Scenario 1 of the simulation study
+
+# packages may be needed
+library(mvtnorm)
+library(SuperLearner)
+library(lme4)
+library(xgboost)
+library(ranger)
+library(nnet)
+library(origami)
+library(boot)
+
 real.mimic <- function(J=34, n = (470+823), te_k_homo = F){
 
   n_treat <- 470
@@ -195,13 +206,14 @@ OneDataSet <- function(iseed = 1, cond = 1) {
 
   Xnames <- c(grep("X_dat", colnames(data_homo), value = T))
 
-  res_homo <- cluster.specific.ate(
-    data_in = data_homo,
-    Xnames = Xnames,
-    estimator = c("triply-robust (dml)")
+  suppressWarnings(
+    res_homo <- cluster.specific.ate(
+      data_in = data_homo,
+      Xnames = Xnames,
+      estimator = c("triply-robust (dml)")
+    )
   )
-
-
+  
   est_teK_homo <- res_homo[["triply_dml.ate_K"]]
 
 
@@ -214,14 +226,15 @@ OneDataSet <- function(iseed = 1, cond = 1) {
   Xnames <- c(grep("X_dat", colnames(data_heter), value = T))
 
   # crossfit
-
-  res_heter <- cluster.specific.ate(
-    data_in = data_heter,
-    Xnames = Xnames,
-    estimator = c("triply-robust (dml)")
+  suppressWarnings(
+    res_heter <- cluster.specific.ate(
+      data_in = data_heter,
+      Xnames = Xnames,
+      estimator = c("triply-robust (dml)")
+    )
+    
   )
-
-
+  
   est_teK_heter <- res_heter[["triply_dml.ate_K"]]
 
   library(tidyverse)
