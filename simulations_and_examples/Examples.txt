@@ -1,1 +1,0 @@
-To demonstrate what the estimates look like when the cluster-specific effects (ATE_k) are truly homogeneous vs. heterogenous, we created two example datasets; in the first, the true values of ATE_k, k=1,…,J were the same, whereas in the second the true values were heterogeneous. 
