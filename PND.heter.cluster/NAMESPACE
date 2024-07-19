@@ -1,5 +1,3 @@
 
 export(ATEk.R)
-export(balance.R)
-export(booteach.R)
-export(nuisance.R)
+
