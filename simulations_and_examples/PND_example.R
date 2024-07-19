@@ -1,317 +1,149 @@
-
-load("covariates_data.RData")
-
-
-# install or download the package for implementing the estimators
-library(devtools)
-install_github("xliu12/PND.heter/PND.hetercluster")
-library(PND.heter.cluster)
-# the R function information
-?cluster.specific.ate
-
-
-# List the covariates
-covariateNames <- c(#student-level covariates:
-  "X1RTHETK1", #X1 READING IRT THETA SCORE-K1 DATA FILE
-  "X1MTHETK1", #X1 MATH IRT THETA SCORE--K1 DATA FILE
-  "X1TCHAPP", #X1 TEACHER REPORT APPROACHES TO LEARNING
-  "X1TCHCON", #X1 TEACHER REPORT SELF-CONTROL
-  "X1TCHPER", #X1 TEACHER REPORT INTERPERSONAL
-  "X1TCHEXT", #X1 TEACHER REPORT EXTERN PROB BEHAVIORS
-  "X1TCHINT", #X1 TEACHER REPORT INTERN PROB BEHAVIORS
-  "X1ATTNFS", #X1 TEACHER REPORT ATTENTIONAL FOCUS
-  "X1INBCNT", #X1 TEACHER REPORT INHIBITORY CONTROL
-  "X_CHSEX_R",#Sex
-  "X_RACETH_R",#Race
-  "X2DISABL2", #Disability
-  "C1ENGHM", #English Language Learner
-  "X12MOMAR", #Parents married
-  "X1NUMSIB", # of siblings
-  "P1OLDMOM", #age of mom
-  "P1CHLDBK", #books at home
-  "P2DISTHM", #distance from school
-  "T2PARIN", #parental involvement
-  "X12PAR1ED_I", #mother education
-  "X12PAR2ED_I", #father education
-  "X2INCCAT_I", #income
-  "X1PAR1EMP" #PARENT 1 EMPLOYMENT STATUS
-)
-
-
-# simulate treatment assignment, cluster assignment, outcome given the covariates
-# using data-generation models similar to Scenario 1 of the simulation study
-
-# packages may be needed
-library(mvtnorm)
-library(SuperLearner)
-library(lme4)
-library(xgboost)
-library(ranger)
-library(nnet)
+# loading packages ----------------------
+library(tidyverse)
+library(labelled)
+library(purrr)
 library(origami)
-library(boot)
+library(mvtnorm)
+library(glue)
+library(SuperLearner)
 
-real.mimic <- function(J=34, n = (470+823), te_k_homo = F){
+# loading the method package 
+# devtools::install_github(repo = "xliu12/PND.heter", subdir = "PND.heter.cluster")
+devtools::load_all("PND.heter.cluster")
+# loading the data
+load("data_example.RData")
+# the variables
+ttname <- grep("^tt", colnames(data_in), value = T)
+Kname <- grep("^K", colnames(data_in), value = T)
+Yname <- grep("^Y_TICINSUPMN", colnames(data_in), value = T)
+Xnames <- grep("^X_", colnames(data_in), value = T)
 
-  n_treat <- 470
-  n <- (470+823)
-  Xsample <- Xsample
-
-  J <- 34
-
-  X_dat <- data.frame(model.matrix(~ -1 + ., Xsample))
-  num_x <- ncol(X_dat)
-
-  # treatment ----
-  xmat <- model.matrix(~ -1 + ., data.frame(X_dat=X_dat))
-  alpha.X <- sqrt(0.15) # higher pretest, more likely to participate
-  bx <- alpha.X / sqrt(ncol(xmat)) / ((1:ncol(xmat))^(0))
-
-  treated_p <- n_treat / n
-  ttstar <- xmat %*% bx + rnorm(n)
-  tt <- cut(ttstar, quantile(ttstar, c(0, (1-treated_p), 1)), include.lowest = T)
-  tt <- ifelse(as.numeric(tt)==2, 1, 0)
-  table(tt)
-  # Potential cluster assignment ---------------------
-  wmat <- xmat
-
-  # Observed class sizes were capped at 15 (range = 8–15, Mdn = 12).
-  set.seed(12)
-  bw <- sqrt(0.4) / ((1:ncol(wmat))^(0.9))
-
-  tryk <- FALSE
-  while(tryk == F) {
-    K1star <- wmat %*% bw + rnorm(n)
-    length( c(-6, rep(-1, 15), rep(1, 15)) )
-    obs_size.k <- n_treat /J + c(-6, rep(-0.5, 16), rep(1, 6+8), rep(0,3))
-    obs_prop.k <- cumsum(obs_size.k) / n_treat
-    K1 <- cut(K1star, c(-Inf, quantile((K1star[tt==1]), c(obs_prop.k[1:(J-1)])), Inf), include.lowest = T)
-    K1 <- as.numeric(K1)
-    tryk <- min(table(K1[tt==1])) <=8 & max(table(K1[tt==1]))<=15 & min(table(K1[tt==1])) >=5
-    quantile(table(K1[tt==1]))
-    sum(table(K1))
-  }
-
-  ICC_Y1 <- 0.3
-  sigmau1 <- sqrt( ICC_Y1 )
-  sigmae1 <- sqrt( 1-ICC_Y1 )
-
-  # cluster mean of baseline covariates
-  cluster_K <- aggregate(data.frame(Xb_dat=X_dat), by = list(K1=K1), mean)
-  fixed <- TRUE
-  if (fixed == TRUE) {
-    set.seed(12345)
-    cluster_K$u1 <- (rnorm(J, 0, sigmau1))
-  }
-
-  # data so far
-  id <- 1:n
-  dat <- merge(data.frame(id=id, K1=K1, tt=tt, X_dat=X_dat),
-               cluster_K, by = "K1")
+Yfamily <- ifelse(length(unique(data_in[[Yname]])) > 2, "gaussian", "binomial")
+## run -------------
+set.seed(12345)
+crossfit_res <- atekCl(cv_folds = 4,
+                       data_in = data_in,
+                       ttname = ttname, Kname = Kname, Yname = Yname,
+                       Xnames = Xnames,
+                       Yfamily = "gaussian",
+                       learners_tt = c("SL.nnet", "SL.ranger"),
+                       learners_k = c("SL.nnet.modified"),
+                       learners_y = c("SL.nnet", "SL.ranger"),
+                       sensitivity = "small_to_medium")
 
 
-  # Potential outcomes ----
+## covariate balance -------
+cov_balance <- balance(data_in = data_in, 
+                       cv_components = crossfit_res$cv_components, 
+                       Yfake_name = Xnames, 
+                       ttname = ttname, Kname = Kname) 
 
-  ratio_ve01 <- 1
-  sigmae0 <- sqrt( sigmae1^2*ratio_ve01 )
+summ_cov_balance <- cov_balance %>% 
+  group_by(covariate) %>% 
+  summarise(across(contains("smd"), list(
+    max_abs = ~max(abs(.)), median_abs = ~quantile(abs(.), 0.5)
+  )))
 
-  revar <- sqrt( 0.5*(sigmau1^2+sigmae1^2) + 0.5*sigmae0^2 )
-  ICC_X <- ICC_W <- 0.1
-  bx_control <- sqrt( revar^2*0.26/1/0.5 )
-  bx_within <- sqrt( revar^2*0.15/(1-ICC_X)/0.5 )
-  bx_between<- sqrt( revar^2*0.39/ICC_X/0.5 )
+covariate_name <- c("X_agreeableness", "X_conscientiousness", "X_extraversion", "X_class_poverty", "X_teaching_experience", "X_headstart", "X_public", "X_emotional_support","X_instructional_support", "X_organizational_support", "X_age", "X_gender", "X_income/needs_ratio", "X_self_efficacy", "X_race_Black", "X_race_Hispanic","X_race_White", "X_yrs_education", "X_parent_edu","X_socioeconomic_status")
 
-  e0 <- rnorm(n,0,sigmae0)
-  e1 <- rnorm(n,0,sigmae1)
 
-  gamma0 <- 0;
-  Trteff.size <- 0.2
 
-  sdpool <- sqrt(bx_control^2+bx_control^2+sigmae0^2)
 
-  gamma1 <- Trteff.size*sdpool + gamma0
+cov_balance1 <- cov_balance %>% 
+  full_join(summ_cov_balance[, c("covariate", "covariate_name")], by = "covariate") 
+## plot x ------
+cov_balance_long <- cov_balance1 %>% 
+  pivot_longer(cols = c(contains("smd")), names_to = "if_adj", values_to = "smd") %>% 
+  mutate(if_adj = factor(if_adj, levels=c("smd", "unadj_smd"), labels=c("After adjustment", "Unadjusted"))) %>% 
+  select(covariate,covariate_name, everything())
 
-  # treatment outcome
-
-  kmat <- cbind(
-    u1 = dat$u1,
-    (dat[, grep("Xb_dat", colnames(dat),value = T)] - 0)/sqrt(1),
-    (dat[, grep("X_dat", colnames(dat),value = T)] - 0)/sqrt(1)
+bal.plot <- cov_balance_long %>% 
+  ggplot(aes(x = covariate_name, y = abs(smd))) +
+  # geom_point() +
+  geom_boxplot(aes(fill = if_adj), position = "dodge", outliers = F) +
+  geom_hline(yintercept = 0.1) +
+  labs(x="Covariates", y="|Mean Diff| / SD") +
+  scale_fill_discrete("Covariate balance between each cluster of the treatment arm vs. the control arm ") +
+  scale_y_continuous(breaks = c(0, seq(0.1, 2 ,0.3))) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 20, size = 8, hjust = 0.65),
+    axis.text = element_text(family = "sans"),
+    axis.title = element_text(size = 15, family = "sans"),
+    legend.position = "top", 
+    legend.text = element_text(size = 15, family = "sans"),
+    legend.title = element_text(size = 15, family = "sans"),
+    legend.direction = "vertical",
+    legend.box = "vertical",
+    panel.grid.minor.y = element_blank()
   )
+bal.plot
 
-  bk_treat <- 0 / ((1:ncol(kmat))^(0))
-  names(bk_treat) <- colnames(kmat)
 
-  bk_treat[grep("u1", colnames(kmat), value = T)] <- 1
+## cluster-specific treatment results ----
 
-  bk_treat[grep("Xb_dat", colnames(kmat), value = T)] <- (bx_between-bx_within) / c(1:length(grep("Xb_dat", colnames(kmat), value = T)))^0.9
-  bk_treat[grep("X_dat", colnames(kmat), value = T)] <- bx_within / c(1:length(grep("X_dat", colnames(kmat), value = T)) )^0.9
+ate_K_eg <- data.frame(crossfit_res$ate_K, 
+                        cluster_K = unique(data_in[[Kname]][data_in[[ttname]]==1]) ) %>% 
+  mutate(bootvar_ci1 = ate_k - qnorm(.975)*sqrt(indboot_var/nrow(data_in)),
+         bootvar_ci2 = ate_k + qnorm(.975)*sqrt(indboot_var/nrow(data_in)) )
 
-  # homogeneous treatment effects across clusters
-  if (te_k_homo == TRUE) {
-    bx_control <- bx_between
-    bk_treat[grep("u1", colnames(kmat), value = T)] <- 0
-    e1 <- e1*0
-    e0 <- e0*0
-  }
+sens_ate_K_eg <- purrr::map(1:length(crossfit_res$sens_results), 
+                             function(l=1) {
+                               resl1 <- data.frame(sens_smd=as.numeric(names(crossfit_res$sens_results)[l]), 
+                                                   cluster_K = unique(data_in[[Kname]][data_in[[ttname]]==1]),
+                                                   crossfit_res$sens_results[[l]])
+                               resl1
+                             } ) %>% 
+  reduce(bind_rows)
 
-  # control outcome
-  cmat <- cbind(
-    model.matrix(~ -1 + ., dat[, grep("X_dat", colnames(dat),value = T)])
+
+## main plot ----
+ciplot <- ate_K_eg %>% 
+  arrange(ate_k) %>% 
+  mutate(cluster = factor(order(ate_k)), 
+         ci1=boot_ci1, ci2=boot_ci2) %>% 
+  ggplot(aes(y = ate_k, x= cluster)) +
+  geom_pointrange(aes(ymin = ci1, ymax = ci2)) + 
+  geom_errorbar(aes(ymin = ci1, ymax = ci2)) +
+  # geom_density(aes(y = after_stat(scaled)), linewidth = 0.5 ) +
+  scale_x_discrete("Coaches (i.e., clusters) in the treatment arm") + 
+  scale_y_continuous("Estimated treatment effect") +
+  geom_hline( yintercept = 0, color="brown", linetype="solid", linewidth=1) +
+  # geom_text(data = sumdata,
+  #           mapping = aes(
+  #             label = paste0("SD of ATE_k = ", round(SD_ate_k,2)), 
+  #             x = -0.9, y = 1.1
+  #           ), size = 4.5) +
+  # facet_grid(. ~ cluster_specific_effect, scales = "fixed", labeller = "label_both") +
+  theme_bw() +
+  theme(
+    axis.title.x = element_text(size = 20),
+    axis.title.y = element_text(size = 20)
   )
-  bk_control <- 0 / ((1:ncol(cmat))^(0))
-  names(bk_control) <- colnames(cmat)
-  bk_control[grep("X_dat", colnames(cmat), value = T)] <- bx_control / c(1:length(grep("X_dat", colnames(cmat), value = T)))^0.9
-
-
-  Y1 <- gamma1 + as.matrix(kmat) %*% bk_treat + e1
-  Y0 <- gamma0 + as.matrix(cmat) %*% bk_control + e0
-
-  # True Values
-  ate.sample <- mean( Y1-Y0 )
-  ate_d <- ate.sample /  sd(as.numeric(Y1 * dat$tt + Y0 * (1-dat$tt)))
-
-  sample.te_K <- rep(0, J)
-  for(k in 1:J) { # E[Y1 - Y0 | K1=k]
-    sample.te_K[k] <- mean(( Y1-Y0 )[dat$K1==k])
-  }
-
-  # Observed Data ----------------------------
-  dat[1:3, ]
-  dat$Y <- as.numeric(Y1 * dat$tt + Y0 * (1-dat$tt))
-  dat$K <- dat$K1 * dat$tt + 0 * (1-dat$tt)
-
-  meanYobs <- mean(as.numeric(Y1 * dat$tt + Y0 * (1-dat$tt)))
-  sdYobs <- sd(as.numeric(Y1 * dat$tt + Y0 * (1-dat$tt)))
-
-  datobs <- dat[, c("Y", "K", "tt",
-                    grep("X_dat", colnames(dat),value = T))]
-
-  datobs$id <- 1:nrow(datobs)
-
-
-  out <- mget( ls(), envir = environment() )
-
-  return(out)
-}
+ciplot
 
 
 
-OneDataSet <- function(iseed = 1, cond = 1) {
-  # homogeneous ate_k --------
-  gen_data_homo <- real.mimic(te_k_homo = T)
+## sensitivity plot ---------
+J <- length(unique(ate_K_eg$cluster_K))
 
-  data_homo <- gen_data_homo$datobs
-  data_homo$Y <- (data_homo$Y - mean(data_homo$Y)) / sd(data_homo$Y)
-
-  Xnames <- c(grep("X_dat", colnames(data_homo), value = T))
-
-  suppressWarnings(
-    res_homo <- cluster.specific.ate(
-      data_in = data_homo,
-      Xnames = Xnames,
-      estimator = c("triply-robust (dml)")
-    )
+sensPlot_eg <- sens_ate_K_eg %>% 
+  # mutate(cluster = cluster_K) %>% 
+  mutate(
+    cluster = factor(cluster_K, levels=order(ate_K_eg$ate_k), labels=glue("ATE_cluster_{1:J}")),
+    ci1 = boot_ci1, ci2 = boot_ci2 ) %>% 
+  ggplot(aes(x = sens_smd, y = SenSate_k, ymin=ci1, ymax=ci2)) +
+  facet_wrap(~ cluster, scales = "fixed") +
+  geom_pointrange(aes(ymin = ci1, ymax = ci2)) + 
+  geom_errorbar(aes(ymin = ci1, ymax = ci2)) +
+  # geom_density(aes(y = after_stat(scaled)), linewidth = 0.5 ) +
+  scale_x_continuous("Sensitivity parameter: Mean difference standardized"
+                     , breaks = unique(sens_ate_K_eg2$sens_smd)) + 
+  scale_y_continuous("Estimated treatment effect") +
+  geom_hline( yintercept = 0, color="brown", linetype="solid", linewidth=1) +
+  theme_bw() +
+  theme(
+    axis.title.x = element_text(size = 20),
+    axis.title.y = element_text(size = 20)
   )
-  
-  est_teK_homo <- res_homo[["triply_dml.ate_K"]]
-
-
-  # heter ate_k --------
-  gen_data_heter <- real.mimic(te_k_homo = F)
-
-  data_heter <- gen_data_heter$datobs
-  data_heter$Y <- (data_heter$Y - mean(data_heter$Y)) / sd(data_heter$Y)
-
-  Xnames <- c(grep("X_dat", colnames(data_heter), value = T))
-
-  # crossfit
-  suppressWarnings(
-    res_heter <- cluster.specific.ate(
-      data_in = data_heter,
-      Xnames = Xnames,
-      estimator = c("triply-robust (dml)")
-    )
-    
-  )
-  
-  est_teK_heter <- res_heter[["triply_dml.ate_K"]]
-
-  library(tidyverse)
-  # Plot distribution ----------
-  fig.theme <-
-    theme_bw() +
-    theme(panel.grid.minor = element_line(linewidth = 0),
-          panel.grid.major.x = element_line(linewidth = 0),
-          panel.grid.major.y = element_line(linewidth = 0.5, lineend = "round", color = "grey", linetype = "longdash"),
-          # axis.text.x = element_text(angle = 0, vjust = 0, hjust = 0),
-          axis.text.x = element_text(size = 12),
-          axis.text.y = element_text(size = 14),
-          axis.title.y = element_text(size = 14),
-          axis.title.x = element_text(size = 14),
-          strip.text.x = element_text(size = 14),
-          strip.text.y = element_text(size = 14),
-          legend.text = element_text(size = 18),
-          legend.title = element_text(size = 18),
-          legend.direction = "horizontal",
-          legend.box = "vertical",
-          legend.position = "top",
-          legend.spacing.x = unit(0.1, "mm"),
-          legend.key.height = unit(15, "mm"),
-          legend.key.size = unit(10, "mm"))
-
-
-  # Histogram
-  histdata <- rbind(data.frame(est_teK_homo, cluster_specific_effect = "truly homogeneous"),
-                    data.frame(est_teK_heter, cluster_specific_effect = "truly heterogenous"))
-  sumdata <- histdata %>% group_by(cluster_specific_effect) %>% summarise(
-    SD_ate_k = sd(ate_k),
-    min = min(ate_k), max = max(ate_k), median = median(ate_k),
-    negeff = mean(ate_k < 0), sum(ate_k < 0)
-  )
-  hist_ate.k <- ggplot(histdata, aes(x = ate_k)) +
-    geom_histogram(aes(y = after_stat(ncount)), bins = 20, fill="grey") +
-    geom_density(aes(y = after_stat(scaled)), linewidth = 0.5 ) +
-    scale_x_continuous("Effect estimates across teacheres/classes (clusters) in the treatment arm (ATE_k)" #, limits = c(-2,3)
-    ) +
-    scale_y_continuous("Proportion") +
-    geom_text(data = sumdata,
-              mapping = aes(
-                label = paste0("SD of ATE_k = ", round(SD_ate_k,2)),
-                x = -0.9, y = 1.1
-              ), size = 4.5) +
-    facet_grid(. ~ cluster_specific_effect, scales = "fixed", labeller = "label_both") +
-    fig.theme
-  hist_ate.k
-
-  # Caterpillar plot
-  pdat <- rbind(
-    data.frame(est_teK_homo[order(est_teK_homo$ate_k), ], cluster_specific_effect = "truly homogeneous",
-               cluster = 1:nrow(est_teK_homo)),
-    data.frame(est_teK_heter[order(est_teK_heter$ate_k), ], cluster_specific_effect = "truly heterogenous",
-               cluster = 1:nrow(est_teK_heter))
-  )
-
-  ciplot_ate.k <- ggplot( data = pdat ) +
-    geom_point(aes(x = cluster, y = ate_k), shape = 0, size=3) +
-    geom_segment(aes(x = cluster, xend = cluster, y = ate_k_ci1, yend = ate_k_ci2), linewidth = 1, inherit.aes = F) +
-    scale_x_discrete("Teacher/Class (i.e., cluster) in the treatment arm") +
-    scale_y_continuous("Cluster-specific effects: Estimates and 95% CI") +
-    facet_grid(. ~ cluster_specific_effect, scales = "fixed", labeller = "label_both") +
-    fig.theme
-
-  ciplot_ate.k
-
-  example_out <- list(
-    dataset_homo = data_homo,
-    dataset_heter = data_heter,
-    est_teK_homo = est_teK_homo,
-    est_teK_heter = est_teK_heter,
-    hist_ate.k = hist_ate.k,
-    ciplot_ate.k = ciplot_ate.k
-  )
-
-  return(example_out)
-}
-
-save(example_out, file = "~/Library/CloudStorage/Box-Box/Labs/Causal/PND/R_github/example_out.RData")
+sensPlot_eg
