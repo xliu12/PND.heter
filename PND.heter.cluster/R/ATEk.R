@@ -5,49 +5,65 @@
 #'    column "K" is the cluster assignment in the treatment arm ("K" is coded as 1, 2, ..., J for each individual in the treatment arm with J being the number of clusters, and "K" is coded as 0 for individuals in the control arm);
 #'    column "Y" is the outcome. The other columns are baseline covariates (X).
 #' @param Xnames A character vector of the names of the columns in "data_in" that correspond to baseline covariates (X)
-#' @param estimator A character vector of the names of the estimators to use for estimating the cluster-specific treatment effects (ATE_k, k = 1,...,J). The estimators currently supported include those described in Liu (2023), including (i) trt-cluster, (ii) trt-y, (iii) cluster-y, (iv) triply-robust (linear), and (v) triply-robust (dml).
-#'    The estimators (i)-(iv) are implemented with the parametric models where linear terms of the baseline covariates are included.
-#'    the estimator (v) triply-robust (dml) is implemented with the double machine learning procedure (Chernozhukov et al., 2018 <https://doi.org/10.1111/ectj.12097>) with two-fold cross-fitting and data-adaptive packages; specifically, for estimating the cluster assignment probability, the "xgboost" R package is used <https://cran.r-project.org/package=xgboost>; for estimating the treatment probability and the outcome mean, an ensemble of algorithms is used, including boosted trees (via the “xgboost” R package), random forest (via the "ranger" R package <https://cran.r-project.org/package=ranger>), and generalized additive model (via the "gam" R package <https://cran.r-project.org/package=xgboost>.), implemented with the super learner ensembling procedure (via the "SuperLearner" R package <https://cran.r-project.org/package=SuperLearner>).
-#' @param y1model_lme Whether to use the random-effects outcome regression for the estimators (ii) trt-y, (iii) cluster-y, and (iv) triply-robust (linear), where the outcome mean is involved. If "y1model_lme = TRUE", the random-intercept outcome regression (with the cluster-mean covariates and cluster-mean centered covariates) will be used; if "y1model_lme = FALSE", the fixed-effects outcome regression will be used.
-#' @param randomized.tt Whether the treatment assignment is randomized. If "randomized.tt = TRUE", the treatment probability will be a constant specified by the argument "randomized.ttprop", which is the proportion of individuals randomized to the treatment arm.
-#' @param randomized.ttprop The proportion of individuals randomized to the treatment arm.
 #'
 #'
 #' @export
 #'
-#' @examples
-#'  data(data_in)
-#'  data_in <- data_in
-#'  Xnames <- c(grep("X_dat", colnames(data_in), value = TRUE))
-#'
-#'  # estimates_ate_K <- cluster.specific.ate(
-#'  # data_in = data_in,
-#'  # Xnames = Xnames,
-#'  # estimator = c("trt-cluster",
-#'  # "trt-y",
-#'  # "cluster-y",
-#'  # "triply-robust (linear)",
-#'  # "triply-robust (dml)"),
-#'  # y1model_lme = FALSE,
-#'  # randomized.tt = FALSE, randomized.ttprop = NULL
-#'  # )
-#'
-#'
 
 
-
-
-# library(lme4)
-# library(SuperLearner)
-# library(ranger)
-# library(xgboost)
-# library(nnet)
-# library(SuperLearner)
-# library(origami)
-# library(boot)
 
 # Estimating cluster-specific treatment effects (ate_K)--------------------------------------
+atekCl <- function(cv_folds = 4L,
+                   data_in,
+                   ttname = "tt", Kname = "K", Yname = "Y",
+                   Xnames,
+                   Yfamily = "gaussian",
+                   learners_tt,
+                   learners_k,
+                   learners_y,
+                   sensitivity = NULL,
+                   Fit = "mlr"
+                   ) {
 
+  set.seed(12345)
+  crossfit_res <- cluster.specific.ate(
+    cv_folds = cv_folds,
+    data_in = data_in,
+    ttname = ttname, Kname = Kname, Yname = Yname,
+    Xnames = Xnames,
+    Fit = Fit, # Fit = "mlr"
+    omit.tt = FALSE,
+    omit.k = FALSE,
+    y1model_lme = "y1k",
+    Yfamily = Yfamily,
+    learners_tt = learners_tt,
+    learners_k = learners_k,
+    learners_y = learners_y,
+    combination = NULL,
+    sensitivity = sensitivity
+  )
+
+  # if (nboot>0) {
+  #   cv_components <- crossfit_res$cv_components
+  #
+  #   set.seed(12333)
+  #   seeds_boot <- sample(1:1e4, nboot, replace = F)
+  #   boots <- sapply(seeds_boot, boot.atek.cl,
+  #                   data_in = data_in,
+  #                   cv_components = cv_components,
+  #                   Xnames = Xnames,
+  #                   ttname = ttname,
+  #                   Kname = Kname,
+  #                   Yname = Yname,
+  #                   Yfamily = Yfamily)
+  #   crossfit_res$ate_K$ate_k_var_bootcl <- apply(boots, 1, var, na.rm=TRUE)
+  #   crossfit_res$ate_K$ate_k_ci1_bootcl <- apply(boots, 1, quantile, 0.025, na.rm=TRUE)
+  #   crossfit_res$ate_K$ate_k_ci2_bootcl <- apply(boots, 1, quantile, 0.975, na.rm=TRUE)
+  # }
+
+  return(crossfit_res)
+
+}
 
 eif.k <- function(v = 1,  #fold,
                   folds,
