@@ -1,3 +1,5 @@
+#' @export
+
 atekCl <- function(cv_folds = 4L,
                    data_in,
                    ttname = "tt", Kname = "K", Yname = "Y",
