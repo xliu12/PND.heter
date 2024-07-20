@@ -13,6 +13,9 @@ library(nnet)
 library(origami)
 library(boot)
 
+# devtools::install_github(repo = "xliu12/PND.heter", subdir = "PND.heter.cluster")
+# or download the package and then
+devtools::load_all("PND.heter.cluster")
 
 GenData <- function(seed = 12345,
                     J=40, # number of Kters in treatment condition
