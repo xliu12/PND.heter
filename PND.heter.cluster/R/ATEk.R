@@ -3,27 +3,49 @@
 #' @param data_in A \code{data.frame} containing the observed data.
 #'    In "data_in", column "tt" is the treatment assignment ("tt" is coded as 0 for individuals in the control arm and as 1 for individuals in the treatment arm);
 #'    column "K" is the cluster assignment in the treatment arm ("K" is coded as 1, 2, ..., J for each individual in the treatment arm with J being the number of clusters, and "K" is coded as 0 for individuals in the control arm);
-#'    column "Y" is the outcome. The other columns are baseline covariates (X).
+#' @param Ynames A character string of the name of the column in "data_in" that correspond to the outcome variable
 #' @param Xnames A character vector of the names of the columns in "data_in" that correspond to baseline covariates (X)
 #'
 #'
 #' @export
 #'
+#' @examples
+#'  data(data_in)
+#'  data_in <- data_in
+#'  Xnames <- c(grep("X_dat", colnames(data_in), value = TRUE))
+#'
+#'  # estimates_ate_K <- atekCl(
+#'  # data_in = data_in, ttname = "tt", Kname = "K", Yname = "Y",
+#'  # Xnames = Xnames,
+#'  # Yfamily = "gaussian"
+#'  # )
+#'
+#'
 
 
+
+
+# library(lme4)
+# library(SuperLearner)
+# library(ranger)
+# library(xgboost)
+# library(nnet)
+# library(SuperLearner)
+# library(origami)
+# library(boot)
 
 # Estimating cluster-specific treatment effects (ate_K)--------------------------------------
-atekCl <- function(cv_folds = 4L,
-                   data_in,
+
+atekCl <- function(data_in,
                    ttname = "tt", Kname = "K", Yname = "Y",
                    Xnames,
                    Yfamily = "gaussian",
-                   learners_tt,
-                   learners_k,
-                   learners_y,
+                   learners_tt = c("SL.nnet", "SL.ranger"),
+                   learners_k = c("SL.nnet.modified"),
+                   learners_y = c("SL.nnet", "SL.ranger"),
                    sensitivity = NULL,
-                   Fit = "mlr"
-                   ) {
+                   Fit = "mlr", cv_folds = 4L
+) {
 
   set.seed(12345)
   crossfit_res <- cluster.specific.ate(
@@ -64,6 +86,7 @@ atekCl <- function(cv_folds = 4L,
   return(crossfit_res)
 
 }
+
 
 eif.k <- function(v = 1,  #fold,
                   folds,
@@ -650,7 +673,6 @@ bound_precision <- function(vals, tol = 1e-6) {
 }
 
 bound_propensity <- function(vals, bounds = c(0.01, 0.99)) {
-  assertthat::assert_that(!(max(vals) > 1 || min(vals) < 0))
   vals[vals < bounds[1]] <- bounds[1]
   vals[vals > bounds[2]] <- bounds[2]
   return(vals)
