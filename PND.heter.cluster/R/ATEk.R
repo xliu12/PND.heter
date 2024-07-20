@@ -10,31 +10,31 @@
 #' @export
 #'
 #' @examples
-#'  data(data_in)
-#'  data_in <- data_in
-#'  Xnames <- c(grep("X_dat", colnames(data_in), value = TRUE))
 #'
-#'  # estimates_ate_K <- atekCl(
-#'  # data_in = data_in, ttname = "tt", Kname = "K", Yname = "Y",
-#'  # Xnames = Xnames,
-#'  # Yfamily = "gaussian"
-#'  # )
+#' # library(tidyverse)
+#' # library(SuperLearner)
+#' # library(glue)
+#' #
+#' # data(data_in)
+#' # data_in <- data_in
+#' # Xnames <- c(grep("X_dat", colnames(data_in), value = TRUE))
+#' #
+#' # estimates_ate_K <- atekCl(
+#' # data_in = data_in, ttname = "tt", Kname = "K", Yname = "Y",
+#' # Xnames = Xnames,
+#' # Yfamily = "gaussian",
+#' # sensitivity = NULL # or "small_to_medium"
+#' # )
+#' # estimates_ate_K$ate_K
+
 #'
 #'
 
 
 
-
-# library(lme4)
-# library(SuperLearner)
-# library(ranger)
-# library(xgboost)
-# library(nnet)
-# library(SuperLearner)
-# library(origami)
-# library(boot)
 
 # Estimating cluster-specific treatment effects (ate_K)--------------------------------------
+
 
 atekCl <- function(data_in,
                    ttname = "tt", Kname = "K", Yname = "Y",
@@ -82,6 +82,7 @@ atekCl <- function(data_in,
   #   crossfit_res$ate_K$ate_k_ci1_bootcl <- apply(boots, 1, quantile, 0.025, na.rm=TRUE)
   #   crossfit_res$ate_K$ate_k_ci2_bootcl <- apply(boots, 1, quantile, 0.975, na.rm=TRUE)
   # }
+
 
   return(crossfit_res)
 
@@ -651,9 +652,9 @@ cluster.specific.ate <- function(
 
   # output ----
 
-  crossfit_out <- list(cv_components = cv_components,
+  crossfit_out <- list(#cv_components = cv_components,
                        # dr
-                       ateComb=ateComb,
+                       #ateComb=ateComb,
                        ate_K = ate_K
                        ,sens_results = sens_results
   )

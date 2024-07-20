@@ -15,7 +15,9 @@ Imports:
     xgboost,
     nnet,
     origami,
-    boot
+    boot,
+    tidyverse,
+    glue
 Suggests:
     testthat,
     knitr,
