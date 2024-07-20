@@ -9,7 +9,9 @@ library(SuperLearner)
 
 # loading the method package 
 # devtools::install_github(repo = "xliu12/PND.heter", subdir = "PND.heter.cluster")
+# or download the package and then
 devtools::load_all("PND.heter.cluster")
+
 # loading the data
 load("data_example.RData")
 # the variables
