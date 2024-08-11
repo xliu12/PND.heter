@@ -50,13 +50,7 @@ GenData <- function(seed = 12345,
 
   covariance_x <- diag(1, nrow = num_x)
   covariance_x[covariance_x==0] <- 0.2
-  if (fix_x) {
-    set.seed(12345)
-    X_dat <- rmvnorm(n, sigma = covariance_x)
-    set.seed(seed=seed+1)
-  } else {
-    X_dat <- rmvnorm(n, sigma = covariance_x)
-  }
+  X_dat <- rmvnorm(n, sigma = covariance_x)
   X_dat[,4] <- 1*(X_dat[,4]>0) # dummy indicator of gender
 
   dat <- data.frame(id=id, X_dat=X_dat)
