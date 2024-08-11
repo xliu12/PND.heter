@@ -291,14 +291,10 @@ condition_all <- map2_df(
 
 
 condition <- condition_all %>%
-  filter((
-         (
-             (if_interference+if_size ==2 & te_k_homo==0) |
+  filter( (if_interference+if_size ==2 & te_k_homo==0) |
             (if_interference+if_size ==0 & te_k_homo==1) |
                  (if_interference+if_size ==0 & te_k_homo==0)
-          )
          ) %>%
-  # te_k_homo = 1 implies if_interference+if_size==0
   filter(gen_quadratic.tt+ gen_quadratic.Y+ gen_quadratic.K1==3)
 
 
