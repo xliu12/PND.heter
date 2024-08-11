@@ -652,7 +652,7 @@ cluster.specific.ate <- function(
 
   # output ----
 
-  crossfit_out <- list(cv_components = cv_components,
+  crossfit_out <- list( cv_components = cv_components,
                        # dr
                        #ateComb=ateComb,
                        ate_K = ate_K
