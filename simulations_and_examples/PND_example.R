@@ -13,7 +13,7 @@ library(SuperLearner)
 devtools::load_all("../PND.heter.cluster")
 
 # loading the data
-load("data_example.RData")
+load("../simulations_and_examples/data_example.RData")
 # the variables
 ttname <- grep("^tt", colnames(data_in), value = T)
 Kname <- grep("^K", colnames(data_in), value = T)
