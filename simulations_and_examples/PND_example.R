@@ -47,7 +47,7 @@ summ_cov_balance <- cov_balance %>%
   )))
 
 covariate_name <- c("X_agreeableness", "X_conscientiousness", "X_extraversion", "X_class_poverty", "X_teaching_experience", "X_headstart", "X_public", "X_emotional_support","X_instructional_support", "X_organizational_support", "X_age", "X_gender", "X_income/needs_ratio", "X_self_efficacy", "X_race_Black", "X_race_Hispanic","X_race_White", "X_yrs_education", "X_parent_edu","X_socioeconomic_status")
-
+summ_cov_balance$covariate_name <- covariate_name
 
 
 
