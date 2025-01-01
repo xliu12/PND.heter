@@ -2,52 +2,88 @@
 % Please edit documentation in R/ATEk.R
 \name{atekCl}
 \alias{atekCl}
-\title{Estimation of the cluster-specific treatment effects in the partially nested design}
+\title{Estimation of the cluster-specific treatment effects in the partially nested design.}
 \usage{
 atekCl(
   data_in,
-  ttname = "tt",
-  Kname = "K",
-  Yname = "Y",
+  ttname,
+  Kname,
+  Yname,
   Xnames,
   Yfamily = "gaussian",
-  learners_tt = c("SL.nnet", "SL.ranger"),
-  learners_k = c("SL.nnet.modified"),
-  learners_y = c("SL.nnet", "SL.ranger"),
+  learners_tt = c("SL.glm"),
+  learners_k = c("SL.multinom"),
+  learners_y = c("SL.glm"),
   sensitivity = NULL,
   Fit = "mlr",
   cv_folds = 4L
 )
 }
 \arguments{
-\item{data_in}{A \code{data.frame} containing the observed data.
-In "data_in", column "tt" is the treatment assignment ("tt" is coded as 0 for individuals in the control arm and as 1 for individuals in the treatment arm);
-column "K" is the cluster assignment in the treatment arm ("K" is coded as 1, 2, ..., J for each individual in the treatment arm with J being the number of clusters, and "K" is coded as 0 for individuals in the control arm);}
+\item{data_in}{A \code{data.frame} containing all necessary variables.}
 
-\item{Xnames}{A character vector of the names of the columns in "data_in" that correspond to baseline covariates (X)}
+\item{ttname}{[\code{character}]\cr
+A character string of the column name of the treatment variable. The treatment variable should be dummy-coded, with 1 for the (clustered) treatment arm and 0 for the (non-clustered) control arm.}
 
-\item{Ynames}{A character string of the name of the column in "data_in" that correspond to the outcome variable}
+\item{Kname}{[\code{character}]\cr
+A character string of the column name of the cluster assignment variable. This variable should be coded as 0 for individuals in the control arm, the arm without the cluster assignment.}
+
+\item{Xnames}{[\code{character}]\cr
+A character vector of the column names of the baseline covariates.}
+
+\item{learners_tt}{[\code{character}]\cr
+A character vector of methods for estimating the treatment model, chosen from the \code{SuperLearner} R package. Default is \code{"SL.glm"}, a generalized linear model for the binary treatment variable. Other available methods can be found using the R function \code{SuperLearner::listWrappers()}.}
+
+\item{learners_k}{[\code{character}]\cr
+A character string of a method for estimating the cluster assignment model, which can be one of \code{"SL.multinom"} (default),  \code{"SL.xgboost.modified"}, \code{"SL.ranger.modified"}, and \code{"SL.nnet.modified"}.
+Default is  \code{"SL.multinom"}, the multinomial regression (\code{nnet::multinom}) for the categorical cluster assignment using the treatment arm data. The other options are \code{"SL.xgboost.modified"} (gradient boosted model, \code{xgboost::xgboost}), \code{"SL.ranger.modified"} (random forest model, \code{ranger::ranger}), and \code{"SL.nnet.modified"} (neural network model, \code{"SL.nnet.modified"})  modified for fitting categorical response variable of type  multinomial.}
+
+\item{learners_y}{[\code{character}]\cr
+A character vector of methods for estimating the outcome model, chosen from the \code{SuperLearner} R package. Default is \code{"SL.glm"}, a generalized linear model for the outcome variable, with \code{family} specified by \code{Yfamily}. Other available methods can be found using the R function \code{SuperLearner::listWrappers()}.}
+
+\item{sensitivity}{Specification for sensitivity parameter values on the standardized mean difference scale, which can be \code{NULL} (default) or \code{"small_to_medium"}. If \code{NULL}, no sensitivity analysis will be run. If \code{"small_to_medium"}, the function will run a sensitivity analysis for the cluster assignment ignorability assumption, and the sensitivity parameter values indicate a deviation from this assumption of magnitude 0.1 and 0.3 standardized mean difference.}
+
+\item{cv_folds}{[\code{numeric(1)}]\cr The number of cross-fitting folds. Default is 4.}
+
+\item{Ynames}{[\code{character}]\cr
+A character string of the column name of the outcome variable}
+}
+\value{
+A \code{list} containing the following components:
+
+\item{ate_K}{A \code{data.frame} of the estimation results.
+
+The columns "ate_k", "std_error", "boot_ci1", and "boot_ci2" contain the estimate, standard error estimate, and lower and upper bounds of the 0.95 confidence interval of the cluster-specific treatment effect for the cluster (indicated by column "cluster") in the same row.}
+
+\item{cv_components}{A \code{data.frame} of nuisance model estimates.}
+\item{sens_results}{\code{NULL} if the argument \code{sensitivity = NULL}.
+
+If the argument \code{sensitivity = "small_to_medium"} is specified, \code{sens_results} is a list of four data frames, containing the estimation results with the sensitivity parameter value (standardized mean difference) being 0.1, 0.3, -0.1, -0.3.}
 }
 \description{
-Estimation of the cluster-specific treatment effects in the partially nested design
+Estimation of the cluster-specific treatment effects in the partially nested design.
 }
 \examples{
 
-# library(tidyverse)
-# library(SuperLearner)
-# library(glue)
-#
-# data(data_in)
-# data_in <- data_in
-# Xnames <- c(grep("X_dat", colnames(data_in), value = TRUE))
-#
-# estimates_ate_K <- atekCl(
-# data_in = data_in, ttname = "tt", Kname = "K", Yname = "Y",
-# Xnames = Xnames,
-# Yfamily = "gaussian",
-# sensitivity = NULL # or "small_to_medium"
-# )
-# estimates_ate_K$ate_K
+library(tidyverse)
+library(SuperLearner)
+library(glue)
+
+# data
+data(data_in)
+data_in <- data_in
+
+# baseline covariates
+Xnames <- c(grep("X_dat", colnames(data_in), value = TRUE))
+
+estimates_ate_K <- atekCl(
+data_in = data_in,
+ttname = "tt",  # treatment variable
+Kname = "K",    # cluster assignment variable, coded as 0 for individuals in the (non-clustered) control arm
+Yname = "Y",    # outcome variable
+Xnames = Xnames
+)
+estimates_ate_K$ate_K
 
 
 }
