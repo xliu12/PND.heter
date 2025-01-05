@@ -86,9 +86,7 @@ bal.plot
 ## cluster-specific treatment results ----
 
 ate_K_eg <- data.frame(crossfit_res$ate_K, 
-                        cluster_K = unique(data_in[[Kname]][data_in[[ttname]]==1]) ) %>% 
-  mutate(bootvar_ci1 = ate_k - qnorm(.975)*sqrt(indboot_var/nrow(data_in)),
-         bootvar_ci2 = ate_k + qnorm(.975)*sqrt(indboot_var/nrow(data_in)) )
+                        cluster_K = unique(data_in[[Kname]][data_in[[ttname]]==1]) ) 
 
 sens_ate_K_eg <- purrr::map(1:length(crossfit_res$sens_results), 
                              function(l=1) {
