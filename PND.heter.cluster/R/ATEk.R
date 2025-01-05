@@ -5,7 +5,7 @@
 #'  A character string of the column name of the treatment variable. The treatment variable should be dummy-coded, with 1 for the (clustered) treatment arm and 0 for the (non-clustered) control arm.
 #' @param Kname [\code{character}]\cr
 #'  A character string of the column name of the cluster assignment variable. This variable should be coded as 0 for individuals in the control arm, the arm without the cluster assignment.
-#' @param Ynames [\code{character}]\cr
+#' @param Yname [\code{character}]\cr
 #' A character string of the column name of the outcome variable
 #' @param Xnames  [\code{character}]\cr
 #' A character vector of the column names of the baseline covariates.
@@ -17,6 +17,7 @@
 #' @param learners_y  [\code{character}]\cr
 #' A character vector of methods for estimating the outcome model, chosen from the \code{SuperLearner} R package. Default is \code{"SL.glm"}, a generalized linear model for the outcome variable, with \code{family} specified by \code{Yfamily}. Other available methods can be found using the R function \code{SuperLearner::listWrappers()}.
 #' @param cv_folds [\code{numeric(1)}]\cr The number of cross-fitting folds. Default is 4.
+#' @param Yfamily [\code{numeric(1)}]\cr Variable type of the outcome, with \code{Yfamily = "gaussian"} for continuous outcome, and \code{Yfamily = "binomial"} for binary outcome.
 #' @param sensitivity Specification for sensitivity parameter values on the standardized mean difference scale, which can be \code{NULL} (default) or \code{"small_to_medium"}. If \code{NULL}, no sensitivity analysis will be run. If \code{"small_to_medium"}, the function will run a sensitivity analysis for the cluster assignment ignorability assumption, and the sensitivity parameter values indicate a deviation from this assumption of magnitude 0.1 and 0.3 standardized mean difference.
 #'
 #'
@@ -39,6 +40,7 @@
 #' library(tidyverse)
 #' library(SuperLearner)
 #' library(glue)
+#' library(nnet)
 #'
 #' # data
 #' data(data_in)
@@ -76,7 +78,7 @@ atekCl <- function(data_in,
                    learners_k = c("SL.multinom"),
                    learners_y = c("SL.glm"),
                    sensitivity = NULL,
-                   Fit = "mlr", cv_folds = 4L
+                   cv_folds = 4L
 ) {
 
   data_in1 <- data_in %>%
@@ -90,7 +92,7 @@ atekCl <- function(data_in,
     data_in = data_in1,
     ttname = "tt", Kname = "K", Yname = Yname,
     Xnames = Xnames,
-    Fit = Fit, # Fit = "mlr"
+    Fit = "mlr", # Fit = "mlr"
     omit.tt = FALSE,
     omit.k = FALSE,
     y1model_lme = "y1k",

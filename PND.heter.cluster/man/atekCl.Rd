@@ -15,7 +15,6 @@ atekCl(
   learners_k = c("SL.multinom"),
   learners_y = c("SL.glm"),
   sensitivity = NULL,
-  Fit = "mlr",
   cv_folds = 4L
 )
 }
@@ -28,8 +27,13 @@ A character string of the column name of the treatment variable. The treatment v
 \item{Kname}{[\code{character}]\cr
 A character string of the column name of the cluster assignment variable. This variable should be coded as 0 for individuals in the control arm, the arm without the cluster assignment.}
 
+\item{Yname}{[\code{character}]\cr
+A character string of the column name of the outcome variable}
+
 \item{Xnames}{[\code{character}]\cr
 A character vector of the column names of the baseline covariates.}
+
+\item{Yfamily}{[\code{numeric(1)}]\cr Variable type of the outcome, with \code{Yfamily = "gaussian"} for continuous outcome, and \code{Yfamily = "binomial"} for binary outcome.}
 
 \item{learners_tt}{[\code{character}]\cr
 A character vector of methods for estimating the treatment model, chosen from the \code{SuperLearner} R package. Default is \code{"SL.glm"}, a generalized linear model for the binary treatment variable. Other available methods can be found using the R function \code{SuperLearner::listWrappers()}.}
@@ -44,9 +48,6 @@ A character vector of methods for estimating the outcome model, chosen from the 
 \item{sensitivity}{Specification for sensitivity parameter values on the standardized mean difference scale, which can be \code{NULL} (default) or \code{"small_to_medium"}. If \code{NULL}, no sensitivity analysis will be run. If \code{"small_to_medium"}, the function will run a sensitivity analysis for the cluster assignment ignorability assumption, and the sensitivity parameter values indicate a deviation from this assumption of magnitude 0.1 and 0.3 standardized mean difference.}
 
 \item{cv_folds}{[\code{numeric(1)}]\cr The number of cross-fitting folds. Default is 4.}
-
-\item{Ynames}{[\code{character}]\cr
-A character string of the column name of the outcome variable}
 }
 \value{
 A \code{list} containing the following components:
@@ -68,6 +69,7 @@ Estimation of the cluster-specific treatment effects in the partially nested des
 library(tidyverse)
 library(SuperLearner)
 library(glue)
+library(nnet)
 
 # data
 data(data_in)

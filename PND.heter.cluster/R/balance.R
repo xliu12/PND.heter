@@ -1,16 +1,30 @@
+
+#' Checking covariate balance based on estimated cluster assignment probabilities (principal score) and treatment assignment probabilities (propensity score).
+#' @param data_in A \code{data.frame} containing all necessary variables.
+#' @param atekCl_results [\code{list}]\cr
+#'  A list returned from the R function \code{atekCl()}.
+#' @param Kname [\code{character}]\cr
+#'  A character string of the column name of the cluster assignment variable. This variable should be coded as 0 for individuals in the control arm, the arm without the cluster assignment.
+#' @param ttname [\code{character}]\cr
+#'  A character string of the column name of the treatment variable. The treatment variable should be dummy-coded, with 1 for the (clustered) treatment arm and 0 for the (non-clustered) control arm.
+#' @param covariate_names  [\code{character}]\cr
+#' A character vector of the column names of the baseline covariates for checking balance.
+
+#'
+#'
+#' @return A \code{data.frame} containing the covariate balance measures (smd, standardized mean difference) between each cluster in the treatment arm and the control arm, both before and after the weighting adjustment.
+#'
 #' @export
-
-# covariate balance checking
-
+#'
 balance <- function(
     data_in,
-    cv_components,
-    Yfake_name="X_dat.1",
-    Xnames, ttname, Kname
+    atekCl_results,
+    covariate_names = "X_dat.1",
+    ttname, Kname
 ){
   set.seed(124)
 
-  cv_components <- crossfit_res$cv_components
+  cv_components <- atekCl_results$cv_components
 
   n <- nrow(data_in)
   J <- length(unique(data_in$K[data_in$tt==1]))
@@ -22,7 +36,7 @@ balance <- function(
   wt0 <- 1*(tt==0)/(1-pt)
 
   K <- data_in[[Kname]]
-  Yfake <- data_in[,Yfake_name, drop=FALSE]
+  Yfake <- data_in[, covariate_name, drop=FALSE]
 
   yfake.kt1.w <- map(1:J, function(k=1) {
     # y.kt1_pred <- 0
@@ -39,7 +53,7 @@ balance <- function(
 
   diff.yfake.k <- map(1:J, function(k=1) {
 
-    if (length(Yfake_name)==1) {
+    if (length(covariate_name)==1) {
       diffk <- mean(yfake.kt1.w[[k]] - yfake.kt0.w[[k]]) / sd(Yfake)
 
       unadj_diffk <- (mean(Yfake[K==k&tt==1])-mean(Yfake[tt==0])) / sd(Yfake)
