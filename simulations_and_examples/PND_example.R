@@ -37,7 +37,7 @@ crossfit_res <- atekCl(data_in = data_in,
 ## covariate balance -------
 cov_balance <- balance(data_in = data_in, 
                        atekCl_results = crossfit_res, 
-                       Yfake_name = Xnames, 
+                       covariate_name = Xnames, 
                        ttname = ttname, Kname = Kname) 
 
 summ_cov_balance <- cov_balance %>% 
