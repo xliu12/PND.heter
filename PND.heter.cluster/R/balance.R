@@ -1,4 +1,4 @@
-
+#' @export
 
 # covariate balance checking
 
