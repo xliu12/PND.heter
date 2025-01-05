@@ -24,8 +24,7 @@ Xnames <- grep("^X_", colnames(data_in), value = T)
 Yfamily <- ifelse(length(unique(data_in[[Yname]])) > 2, "gaussian", "binomial")
 ## run -------------
 set.seed(12345)
-crossfit_res <- atekCl(cv_folds = 4,
-                       data_in = data_in,
+crossfit_res <- atekCl(data_in = data_in,
                        ttname = ttname, Kname = Kname, Yname = Yname,
                        Xnames = Xnames,
                        Yfamily = "gaussian",
@@ -37,7 +36,7 @@ crossfit_res <- atekCl(cv_folds = 4,
 
 ## covariate balance -------
 cov_balance <- balance(data_in = data_in, 
-                       cv_components = crossfit_res$cv_components, 
+                       atekCl_results = crossfit_res, 
                        Yfake_name = Xnames, 
                        ttname = ttname, Kname = Kname) 
 
