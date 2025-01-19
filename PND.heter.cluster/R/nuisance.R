@@ -88,65 +88,6 @@ fitting.Y <- function(train_data, valid_data,
 
   # Y(1) -----
 
-  if (sum(colMeans(train_data) - colMeans(valid_data)) == 0) { full_data <- train_data }
-  if (sum(colMeans(train_data) - colMeans(valid_data)) != 0) { full_data <- rbind(train_data, valid_data) }
-
-  cluster_means <- aggregate(full_data[full_data$tt==1, c("Y", Xnames)],
-                             by = list(K = full_data$K[full_data$tt==1]),
-                             mean)
-
-  if (length(grep("within", ymodel)) == 0) {
-    y_train_data <- train_data[train_data$tt==1, ]
-    y_valid_data_K <- lapply(unique(valid_data$K[valid_data$tt==1]),
-                             FUN = function(k=1) {
-                               valid_data_t1k <- valid_data
-
-                               valid_data_t1k$tt <- 1
-                               valid_data_t1k$K <- k
-
-                               valid_data_t1k$K <- factor(valid_data_t1k$K, levels = levels(factor(y_train_data$K)))
-
-                               return(valid_data_t1k)
-                             })
-  }
-
-  # E(Y | K=k, tt=1, X)
-  if ( length(grep("X.within", ymodel)) > 0 ) {
-    if ( length(grep("Y.within", ymodel)) > 0 ) {
-      within_names <- c("Y", Xnames)
-    }
-    if ( length(grep("Y.within", ymodel)) == 0 ) {
-      within_names <- c(Xnames)
-    }
-    # train data
-    y_train_data <- train_data[train_data$tt==1, ]
-    for(k in unique(y_train_data$K)) {
-      y_train_data[y_train_data$K == k, within_names] <- sweep(
-        y_train_data[y_train_data$K == k, within_names],
-        2,
-        STATS = as.numeric(cluster_means[cluster_means$K==k, within_names]),
-        FUN = `-`)
-    }
-
-    # valid data
-
-    y_valid_data_K <- lapply(unique(valid_data$K[valid_data$tt==1]),
-                             FUN = function(k=1) {
-                               valid_data_t1k <- valid_data
-
-                               valid_data_t1k[, c(Xnames)] <- sweep(
-                                 valid_data_t1k[, c(Xnames)], 2,
-                                 STATS = as.numeric(cluster_means[cluster_means$K==k, c(Xnames)]),
-                                 FUN = `-`)
-                               valid_data_t1k$tt <- 1
-                               valid_data_t1k$K <- k
-
-                               valid_data_t1k$K <- factor(valid_data_t1k$K, levels = levels(factor(y_train_data$K)))
-
-                               return(valid_data_t1k)
-                             })
-
-  }
 
   if( length(grep("K", ymodel)) > 0 ) {
     cov_names <- c("K", Xnames)
@@ -159,28 +100,6 @@ fitting.Y <- function(train_data, valid_data,
 
 
 
-  # lmer
-  if (ymodel == "Y ~ (1 | K) + t1 + X.between + X.within") {
-    y_train_data_wb <- merge(y_train_data, cluster_means, by = "K", suffixes = c("", "_between"))
-    yformula <- formula(paste0("Y ~ (1 | K) + ", paste0(c(Xnames), "_between", collapse = " + "), "+", paste0(c(Xnames), "", collapse = " + ")))
-    if(Yfamily == "gaussian") {
-      sl_fit <- lmer(yformula, data = y_train_data_wb)
-    }
-    if(Yfamily != "gaussian") {
-      sl_fit <- glmer(yformula, data = y_train_data_wb, family = Yfamily)
-    }
-
-    # predictions
-    sl_pred_valid_K <- lapply(unique(valid_data$K[valid_data$tt==1]), FUN = function(k=1) {
-      yk_valid_data_wb <- merge(y_valid_data_K[[k]], cluster_means[cluster_means$K==k, ], by = "K", suffixes = c("", "_between"))
-
-      sl_pred_valid <- predict(sl_fit, yk_valid_data_wb, type="response")
-
-      return(sl_pred_valid)
-    })
-    sl_pred_valid <- sl_pred_valid_K
-
-  }
 
   # with K dummies
   if (ymodel %in% c("Y ~ K + t1 + X")
