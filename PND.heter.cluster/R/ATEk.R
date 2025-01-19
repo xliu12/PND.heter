@@ -423,7 +423,7 @@ cluster.specific.ate <- function(
   data_in <- data_in %>%
     rename(tt = all_of(ttname), K = all_of(Kname), Y = all_of(Yname))
 
-  if(cv_folds == 0) {
+  if(cv_folds <= 1) {
     eif_out <- eif.k(fold = 0,
                      data_in = data_in,
                      Xnames = Xnames,
