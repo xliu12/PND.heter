@@ -88,12 +88,7 @@ fitting.Y <- function(train_data, valid_data,
 
   # Y(1) -----
 
-  if (sum(colMeans(train_data) - colMeans(valid_data)) == 0) { full_data <- train_data }
-  if (sum(colMeans(train_data) - colMeans(valid_data)) != 0) { full_data <- rbind(train_data, valid_data) }
 
-  cluster_means <- aggregate(full_data[full_data$tt==1, c("Y", Xnames)],
-                             by = list(K = full_data$K[full_data$tt==1]),
-                             mean)
 
   if (length(grep("within", ymodel)) == 0) {
     y_train_data <- train_data[train_data$tt==1, ]
