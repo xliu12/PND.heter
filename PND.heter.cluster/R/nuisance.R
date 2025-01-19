@@ -88,6 +88,29 @@ fitting.Y <- function(train_data, valid_data,
 
   # Y(1) -----
 
+  if (sum(colMeans(train_data) - colMeans(valid_data)) == 0) { full_data <- train_data }
+  if (sum(colMeans(train_data) - colMeans(valid_data)) != 0) { full_data <- rbind(train_data, valid_data) }
+
+  cluster_means <- aggregate(full_data[full_data$tt==1, c("Y", Xnames)],
+                             by = list(K = full_data$K[full_data$tt==1]),
+                             mean)
+
+  if (length(grep("within", ymodel)) == 0) {
+    y_train_data <- train_data[train_data$tt==1, ]
+    y_valid_data_K <- lapply(unique(valid_data$K[valid_data$tt==1]),
+                             FUN = function(k=1) {
+                               valid_data_t1k <- valid_data
+
+                               valid_data_t1k$tt <- 1
+                               valid_data_t1k$K <- k
+
+                               valid_data_t1k$K <- factor(valid_data_t1k$K, levels = levels(factor(y_train_data$K)))
+
+                               return(valid_data_t1k)
+                             })
+  }
+
+  # E(Y | K=k, tt=1, X)
 
   if( length(grep("K", ymodel)) > 0 ) {
     cov_names <- c("K", Xnames)
