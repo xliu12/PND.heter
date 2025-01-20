@@ -6,7 +6,8 @@ For details, please see the accompanying methods paper:
 Liu, X. (2024). Assessing heterogeneous causal effects across clusters in partially nested designs. Psychological Methods. Advance online publication. https://doi.org/10.1037/met0000723
 
 ## Installation
-To install `SuperRiesz` directly from Github:
+
+To install `PND.heter.cluster` directly from Github:
 ```
 remotes::install_github(repo = "xliu12/PND.heter", subdir = "PND.heter.cluster")
 ```
