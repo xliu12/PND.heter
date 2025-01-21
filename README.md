@@ -3,7 +3,7 @@ R package for assessing heterogeneous cluster-specific treatment effects in part
 
 For details, please see the accompanying methods paper:
 
-Liu, X. (2024). Assessing heterogeneous causal effects across clusters in partially nested designs. Psychological Methods. Advance online publication. https://doi.org/10.1037/met0000723
+Liu, X. (2024). Assessing heterogeneous causal effects across clusters in partially nested designs. Psychological Methods. Advanced online publication. https://doi.org/10.1037/met0000723
 
 ## Installation
 
