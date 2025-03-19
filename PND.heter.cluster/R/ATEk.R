@@ -107,7 +107,8 @@ atekCl <- function(data_in,
   crossfit_res$ate_K <- crossfit_res$ate_K %>%
     mutate( cluster = unique(data_in[[Kname]][data_in[[ttname]]==1]),
             std_error = sqrt(indboot_var)) %>%
-    select(cluster, ate_k, std_error, boot_ci1, boot_ci2)
+    select(cluster, ate_k, std_error, boot_ci1, boot_ci2) %>%
+    rename(CI_lower = boot_ci1, CI_upper = boot_ci2)
 
 
   return(crossfit_res)
