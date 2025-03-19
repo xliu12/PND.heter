@@ -25,7 +25,7 @@
 #'
 #' \item{ate_K}{A \code{data.frame} of the estimation results.
 #'
-#' The columns "ate_k", "std_error", "boot_ci1", and "boot_ci2" contain the estimate, standard error estimate, and lower and upper bounds of the 0.95 confidence interval of the cluster-specific treatment effect for the cluster (indicated by column "cluster") in the same row.}
+#' The columns "ate_k", "std_error", "CI_lower", and "CI_upper" contain the estimate, standard error estimate, and lower and upper bounds of the 0.95 confidence interval of the cluster-specific treatment effect for the cluster (indicated by column "cluster") in the same row.}
 #'
 #' \item{cv_components}{A \code{data.frame} of nuisance model estimates.}
 
