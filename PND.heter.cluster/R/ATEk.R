@@ -87,21 +87,23 @@ atekCl <- function(data_in,
   data_in1$K[data_in1$tt==1] <- match(data_in1$K[data_in1$tt==1], unique(data_in1$K[data_in1$tt==1]))
 
   set.seed(12345)
-  crossfit_res <- cluster.specific.ate(
-    cv_folds = cv_folds,
-    data_in = data_in1,
-    ttname = "tt", Kname = "K", Yname = Yname,
-    Xnames = Xnames,
-    Fit = "mlr", # Fit = "mlr"
-    omit.tt = FALSE,
-    omit.k = FALSE,
-    y1model_lme = "y1k",
-    Yfamily = Yfamily,
-    learners_tt = learners_tt,
-    learners_k = learners_k,
-    learners_y = learners_y,
-    combination = NULL,
-    sensitivity = sensitivity
+  crossfit_res <- suppressWarnings(
+    cluster.specific.ate(
+      cv_folds = cv_folds,
+      data_in = data_in1,
+      ttname = "tt", Kname = "K", Yname = Yname,
+      Xnames = Xnames,
+      Fit = "mlr", # Fit = "mlr"
+      omit.tt = FALSE,
+      omit.k = FALSE,
+      y1model_lme = "y1k",
+      Yfamily = Yfamily,
+      learners_tt = learners_tt,
+      learners_k = learners_k,
+      learners_y = learners_y,
+      combination = NULL,
+      sensitivity = sensitivity
+    )
   )
 
   crossfit_res$ate_K <- crossfit_res$ate_K %>%
