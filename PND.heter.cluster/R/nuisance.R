@@ -295,7 +295,7 @@ fitting.K <- function(train_data, valid_data,
 
 
 SL.multinom <- function (Y, X, newX, family = "multinomial", obsWeights, size = 2, ...) {
-  # .SL.require("nnet")
+ .SL.require("nnet")
   # if( !is.factor(Y) ) {
   #   Y <- factor(Y)
   # }
@@ -323,6 +323,8 @@ SL.xgboost.modified <- function (Y, X, newX, family = "multinomial", #obsWeights
                                  ntrees = 1000,
                                  max_depth = 4, shrinkage = 0.1, minobspernode = 10, params = list(),
                                  nthread = 1, verbose = 0, save_period = NULL, ...) {
+  .SL.require("xgboost")
+  
   if (!is.matrix(X)) {
     X = model.matrix(~. - 1, X)
   }
@@ -359,6 +361,8 @@ SL.ranger.modified <- function (Y, X, newX, family = "multinomial", #obsWeights,
                                 min.node.size = 10, # default
                                 replace = TRUE, sample.fraction = ifelse(replace, 1, 0.632),
                                 num.threads = 1, verbose = T, ...) {
+  .SL.require("ranger")
+  
   if( !is.data.frame(X) ) {
     X <- as.data.frame(X)
     if( is.null(newX) ) {
@@ -383,18 +387,11 @@ SL.ranger.modified <- function (Y, X, newX, family = "multinomial", #obsWeights,
   return(out)
 }
 
-SL.hal.modified <- function(...) {
-  SL.hal9001(...,
-             # tuning
-             max_degree = 2, smoothness_orders = 1,
-             num_knots =c(25, 10, 5),
-             # reduce_basis = NULL,
-             X_unpenalized = NULL
-  )
-}
+
 
 SL.nnet.modified <- function (Y, X, newX, family="multinomial", size = 2, ...)
 {
+  .SL.require("nnet")
   if( is.null(newX) ) {
     newX <- X
   }
@@ -410,19 +407,3 @@ SL.nnet.modified <- function (Y, X, newX, family="multinomial", size = 2, ...)
 
 
 
-SL.xgboost100 <- function(...) {
-  SL.xgboost(..., ntrees = 100)
-}
-
-SL.xgboost50 <- function(...) {
-  SL.xgboost(..., ntrees = 50)
-}
-
-
-SL.ranger100 <- function(...) {
-  SL.ranger(..., ntrees = 100)
-}
-
-SL.ranger50 <- function(...) {
-  SL.ranger(..., ntrees = 50)
-}
