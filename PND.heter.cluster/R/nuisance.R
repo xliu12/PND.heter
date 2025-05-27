@@ -295,7 +295,7 @@ fitting.K <- function(train_data, valid_data,
 
 
 SL.multinom <- function (Y, X, newX, family = "multinomial", obsWeights, size = 2, ...) {
- .SL.require("nnet")
+ 
   # if( !is.factor(Y) ) {
   #   Y <- factor(Y)
   # }
