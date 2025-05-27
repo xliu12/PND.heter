@@ -295,7 +295,7 @@ fitting.K <- function(train_data, valid_data,
 
 
 SL.multinom <- function (Y, X, newX, family = "multinomial", obsWeights, size = 2, ...) {
- 
+
   # if( !is.factor(Y) ) {
   #   Y <- factor(Y)
   # }
@@ -323,8 +323,8 @@ SL.xgboost.modified <- function (Y, X, newX, family = "multinomial", #obsWeights
                                  ntrees = 1000,
                                  max_depth = 4, shrinkage = 0.1, minobspernode = 10, params = list(),
                                  nthread = 1, verbose = 0, save_period = NULL, ...) {
-  .SL.require("xgboost")
-  
+
+
   if (!is.matrix(X)) {
     X = model.matrix(~. - 1, X)
   }
@@ -361,8 +361,8 @@ SL.ranger.modified <- function (Y, X, newX, family = "multinomial", #obsWeights,
                                 min.node.size = 10, # default
                                 replace = TRUE, sample.fraction = ifelse(replace, 1, 0.632),
                                 num.threads = 1, verbose = T, ...) {
-  .SL.require("ranger")
-  
+
+
   if( !is.data.frame(X) ) {
     X <- as.data.frame(X)
     if( is.null(newX) ) {
@@ -391,7 +391,7 @@ SL.ranger.modified <- function (Y, X, newX, family = "multinomial", #obsWeights,
 
 SL.nnet.modified <- function (Y, X, newX, family="multinomial", size = 2, ...)
 {
-  .SL.require("nnet")
+
   if( is.null(newX) ) {
     newX <- X
   }
