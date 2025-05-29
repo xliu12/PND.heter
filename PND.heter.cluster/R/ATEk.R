@@ -49,10 +49,11 @@
 #' # baseline covariates
 #' Xnames <- c(grep("X_dat", colnames(data_in), value = TRUE))
 #'
-#' estimates_ate_K <- atekCl(
+#' estimates_ate_K <- PND.heter.cluster::atekCl(
 #' data_in = data_in,
 #' ttname = "tt",  # treatment variable
-#' Kname = "K",    # cluster assignment variable, coded as 0 for individuals in the (non-clustered) control arm
+#' Kname = "K",    # cluster assignment variable, coded as 0 for
+#'                 # individuals in the (non-clustered) control arm
 #' Yname = "Y",    # outcome variable
 #' Xnames = Xnames
 #' )
@@ -61,10 +62,72 @@
 #'
 #'
 
+#' @import stats
+#' @import tidyverse
+#' @import glue
+#' @import mvtnorm
+#' @import SuperLearner
+#' @import nnet
+#' @import ranger
+#' @importFrom purrr map reduce
+#' @importFrom dplyr mutate select rename all_of
+#' @importFrom magrittr %>%
 
 
 
 # Estimating cluster-specific treatment effects (ate_K)--------------------------------------
+
+atekCl <- function(data_in,
+                   ttname,
+                   Kname,
+                   Yname,
+                   Xnames,
+                   Yfamily = "gaussian",
+                   learners_tt = c("SL.glm"),
+                   learners_k = c("SL.multinom"),
+                   learners_y = c("SL.glm"),
+                   sensitivity = NULL,
+                   cv_folds = 4L
+) {
+
+  data_in1 <- data_in %>%
+    rename(tt = all_of(ttname), K = all_of(Kname))
+  data_in1$K[data_in1$tt==0] <- 0
+  data_in1$K[data_in1$tt==1] <- match(data_in1$K[data_in1$tt==1], unique(data_in1$K[data_in1$tt==1]))
+
+  set.seed(12345)
+  crossfit_res <- suppressWarnings(
+    cluster.specific.ate(
+      cv_folds = cv_folds,
+      data_in = data_in1,
+      ttname = "tt", Kname = "K", Yname = Yname,
+      Xnames = Xnames,
+      Fit = "mlr", # Fit = "mlr"
+      omit.tt = FALSE,
+      omit.k = FALSE,
+      y1model_lme = "y1k",
+      Yfamily = Yfamily,
+      learners_tt = learners_tt,
+      learners_k = learners_k,
+      learners_y = learners_y,
+      combination = NULL,
+      sensitivity = sensitivity
+    )
+  )
+
+
+  crossfit_res$ate_K <- crossfit_res$ate_K %>%
+    mutate( cluster = unique(data_in[[Kname]][data_in[[ttname]]==1]),
+            std_error = sqrt(indboot_var)) %>%
+    select(cluster, ate_k, std_error, boot_ci1, boot_ci2) %>%
+    rename(CI_lower = boot_ci1, CI_upper = boot_ci2)
+
+
+  return(crossfit_res)
+
+}
+
+
 
 
 eif.k <- function(v = 1,  #fold,
@@ -376,7 +439,7 @@ cluster.specific.ate <- function(
     rename(tt = all_of(ttname), K = all_of(Kname), Y = all_of(Yname))
 
   if(cv_folds <= 1) {
-    eif_out <- eif.k(fold = 0,
+    eif_out <- eif.k(folds = 0,
                      data_in = data_in,
                      Xnames = Xnames,
                      Fit = Fit, # Fit = "mlr"
@@ -644,55 +707,6 @@ cluster.specific.ate <- function(
 
 
 
-atekCl <- function(data_in,
-                   ttname,
-                   Kname,
-                   Yname,
-                   Xnames,
-                   Yfamily = "gaussian",
-                   learners_tt = c("SL.glm"),
-                   learners_k = c("SL.multinom"),
-                   learners_y = c("SL.glm"),
-                   sensitivity = NULL,
-                   cv_folds = 4L
-) {
-  
-  data_in1 <- data_in %>%
-    rename(tt = all_of(ttname), K = all_of(Kname))
-  data_in1$K[data_in1$tt==0] <- 0
-  data_in1$K[data_in1$tt==1] <- match(data_in1$K[data_in1$tt==1], unique(data_in1$K[data_in1$tt==1]))
-  
-  set.seed(12345)
-  crossfit_res <- suppressWarnings(
-    cluster.specific.ate(
-      cv_folds = cv_folds,
-      data_in = data_in1,
-      ttname = "tt", Kname = "K", Yname = Yname,
-      Xnames = Xnames,
-      Fit = "mlr", # Fit = "mlr"
-      omit.tt = FALSE,
-      omit.k = FALSE,
-      y1model_lme = "y1k",
-      Yfamily = Yfamily,
-      learners_tt = learners_tt,
-      learners_k = learners_k,
-      learners_y = learners_y,
-      combination = NULL,
-      sensitivity = sensitivity
-    )
-  )
-  
-  
-  crossfit_res$ate_K <- crossfit_res$ate_K %>%
-    mutate( cluster = unique(data_in[[Kname]][data_in[[ttname]]==1]),
-            std_error = sqrt(indboot_var)) %>%
-    select(cluster, ate_k, std_error, boot_ci1, boot_ci2) %>%
-    rename(CI_lower = boot_ci1, CI_upper = boot_ci2)
-  
-  
-  return(crossfit_res)
-  
-}
 
 
 

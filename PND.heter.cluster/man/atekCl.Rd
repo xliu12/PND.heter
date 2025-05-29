@@ -54,7 +54,7 @@ A \code{list} containing the following components:
 
 \item{ate_K}{A \code{data.frame} of the estimation results.
 
-The columns "ate_k", "std_error", "boot_ci1", and "boot_ci2" contain the estimate, standard error estimate, and lower and upper bounds of the 0.95 confidence interval of the cluster-specific treatment effect for the cluster (indicated by column "cluster") in the same row.}
+The columns "ate_k", "std_error", "CI_lower", and "CI_upper" contain the estimate, standard error estimate, and lower and upper bounds of the 0.95 confidence interval of the cluster-specific treatment effect for the cluster (indicated by column "cluster") in the same row.}
 
 \item{cv_components}{A \code{data.frame} of nuisance model estimates.}
 \item{sens_results}{\code{NULL} if the argument \code{sensitivity = NULL}.
@@ -78,10 +78,11 @@ data_in <- data_in
 # baseline covariates
 Xnames <- c(grep("X_dat", colnames(data_in), value = TRUE))
 
-estimates_ate_K <- atekCl(
+estimates_ate_K <- PND.heter.cluster::atekCl(
 data_in = data_in,
 ttname = "tt",  # treatment variable
-Kname = "K",    # cluster assignment variable, coded as 0 for individuals in the (non-clustered) control arm
+Kname = "K",    # cluster assignment variable, coded as 0 for
+                # individuals in the (non-clustered) control arm
 Yname = "Y",    # outcome variable
 Xnames = Xnames
 )

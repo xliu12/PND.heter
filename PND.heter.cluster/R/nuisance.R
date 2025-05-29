@@ -1,25 +1,14 @@
-# library(mlr3)
-# library(lme4)
-# library(SuperLearner)
-# library(ranger)
-# library(glmnet)
-# # library(gbm)
-# library(xgboost)
-# # library(hal9001)
-# library(nnet)
 
-# for "bartMachine", do
-# if(Sys.getenv("JAVA_HOME")!=""){
-#   Sys.setenv(JAVA_HOME="")
-# }
-# library(rJava)
-# library(bartMachine)
-# listWrappers()
-# SL.gbm; For maximum accuracy one might try at least the following models: glmnet, randomForest, XGBoost, SVM, and bartMachine.
-# We specify family = binomial() because we are predicting a binary outcome, aka classification. With a continuous outcome we would specify family = gaussian().
-# library(data.table)
-# library(tidyverse)
-
+#' @import stats
+#' @import tidyverse
+#' @import glue
+#' @import mvtnorm
+#' @import SuperLearner
+#' @import nnet
+#' @import ranger
+#' @importFrom purrr map reduce
+#' @importFrom dplyr mutate select rename all_of
+#' @importFrom magrittr %>%
 
 interact <- function( covariates, order = 2 ) {
   if(!is.data.frame(covariates)) {

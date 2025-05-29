@@ -1,6 +1,6 @@
 #' data_in
 #'
-#' data_in_with_partially_nested_design
+#' A simulated dataset from the 2/1 partially nested design with treatment-incuded clustering
 #'
 #' @format A data frame with 400 rows and 8 variables:
 #' \describe{

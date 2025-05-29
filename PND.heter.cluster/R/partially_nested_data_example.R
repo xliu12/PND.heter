@@ -1,0 +1,33 @@
+#' partially_nested_data_example
+#'
+#' An example dataset with the 2/1 partially nested design where the clustering is induced by treatment delivery. The example was based on the public-use data of the National Center for Research on Early Childhood Education Teacher Professional Development Study (2007-2011; for details about the study, see this [website](https://www.childandfamilydataarchive.org/cfda/archives/cfda/studies/34848/versions/V2)).
+#' The participants were assigned to either the treatment or control arms. The treatment arm was a one-on-one, web-mediated consultancy intervention in which the participants received online coaching from one of J = 12 coaches; that is, each coach represents a cluster in this example. The control arm participants had no such clustering.
+#'
+#' @format A data frame with 308 rows and 8 variables:
+#' \describe{
+#'   \item{Posttest_Instructional_Support}{The outcome variable, measuring the instructional support quality after the intervention program.}
+#'   \item{Coach_ID}{Coach (i.e., cluster) assignment for participants in the treatment arm.}
+#'   \item{Intervention_Assignment}{Treatment assignment. 1 for participants assigned to the treatment arm to receive the intervention program. 0 for participants assigned to the control arm. The control arm is unclustered.}
+#'   \item{X_gender}{Baseline covariates.}
+#'   \item{X_age}{Baseline covariates.}
+#'   \item{X_TRace_Black}{Baseline covariates.}
+#'   \item{X_TRace_Hispanic}{Baseline covariates.}
+#'   \item{X_TRace_White}{Baseline covariates.}
+#'   \item{X_Tses_aboveMiddle}{Baseline covariates.}
+#'   \item{X_TINTNEED}{Baseline covariates.}
+#'   \item{X_Tparedu_aboveHS}{Baseline covariates.}
+#'   \item{X_yrs_education}{Baseline covariates.}
+#'   \item{X_yrs_teaching_experience}{Baseline covariates.}
+#'   \item{X_CLASSPOV}{Baseline covariates.}
+#'   \item{X_Cheadstart}{Baseline covariates.}
+#'   \item{X_CpublicSCH}{Baseline covariates.}
+#'   \item{X_self_efficacy}{Baseline covariates.}
+#'   \item{X_pretest_emotional_support}{Baseline covariates.}
+#'   \item{X_pretest_organizational_support}{Baseline covariates.}
+#'   \item{X_pretest_instructional_support}{Baseline covariates.}
+#'   \item{X_extraversion}{Baseline covariates.}
+#'   \item{X_agreeableness}{Baseline covariates.}
+#'   \item{X_conscientiousness}{Baseline covariates.}
+#'   \item{id}{Participant id.}
+#' }
+"partially_nested_data_example"

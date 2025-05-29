@@ -1,4 +1,6 @@
 
+#'
+#'
 #' Checking covariate balance based on estimated cluster assignment probabilities (principal score) and treatment assignment probabilities (propensity score).
 #' @param data_in A \code{data.frame} containing all necessary variables.
 #' @param atekCl_results [\code{list}]\cr
@@ -16,6 +18,20 @@
 #'
 #' @export
 #'
+
+
+#' @import stats
+#' @import tidyverse
+#' @import glue
+#' @import mvtnorm
+#' @import SuperLearner
+#' @import nnet
+#' @import ranger
+#' @importFrom purrr map reduce
+#' @importFrom dplyr mutate select rename all_of
+#' @importFrom magrittr %>%
+
+
 balance <- function(
     data_in,
     atekCl_results,
@@ -66,6 +82,6 @@ balance <- function(
     data.frame(cluster=k, covariate = names(diffk), smd=diffk, unadj_smd =unadj_diffk, row.names = NULL)
   })
 
-  diffK <- (diff.yfake.k) %>% reduce(bind_rows)
+  diffK <- (diff.yfake.k) %>% reduce(dplyr::bind_rows)
   diffK
 }
