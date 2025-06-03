@@ -49,6 +49,8 @@ A character vector of methods for estimating the outcome model, chosen from the 
 \item{sensitivity}{Specification for sensitivity parameter values on the standardized mean difference scale, which can be \code{NULL} (default) or \code{"small_to_medium"}. If \code{NULL}, no sensitivity analysis will be run. If \code{"small_to_medium"}, the function will run a sensitivity analysis for the cluster assignment ignorability assumption, and the sensitivity parameter values indicate a deviation from this assumption of magnitude 0.1 and 0.3 standardized mean difference.}
 
 \item{cv_folds}{[\code{numeric(1)}]\cr The number of cross-fitting folds. Default is 4.}
+
+\item{seed}{An integer that is used as argument by the \code{set.seed()} for offsetting the random number generator. Default is to leave the random number generator alone.}
 }
 \value{
 A \code{list} containing the following components:
