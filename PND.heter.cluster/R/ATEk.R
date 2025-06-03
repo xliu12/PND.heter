@@ -55,7 +55,8 @@
 #' Kname = "K",    # cluster assignment variable, coded as 0 for
 #'                 # individuals in the (non-clustered) control arm
 #' Yname = "Y",    # outcome variable
-#' Xnames = Xnames
+#' Xnames = Xnames,
+#' seed = 12345
 #' )
 #' estimates_ate_K$ate_K
 
@@ -173,6 +174,7 @@ eif.k <- function(v = 1,  #fold,
   }
 
   # Fit models  -----------------
+  seed_nuisance <- NULL
   if(!is.null(seed)){
     seed_nuisance <- seed - 2346
   }

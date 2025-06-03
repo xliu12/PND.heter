@@ -87,7 +87,8 @@ ttname = "tt",  # treatment variable
 Kname = "K",    # cluster assignment variable, coded as 0 for
                 # individuals in the (non-clustered) control arm
 Yname = "Y",    # outcome variable
-Xnames = Xnames
+Xnames = Xnames,
+seed = 12345
 )
 estimates_ate_K$ate_K
 
