@@ -23,7 +23,8 @@ fitting.tt <- function(train_data, valid_data,
                        tmodel = "tt ~ X",
                        randomized.tt.prop = 0.5,
                        Xnames,
-                       SL_library = c("glm")
+                       SL_library = c("glm"),
+                       seed = NULL
 ) {
 
 
@@ -39,7 +40,9 @@ fitting.tt <- function(train_data, valid_data,
       cov_names <- c(Xnames)
     }
 
-    # set.seed(9999)
+    if(!is.null(seed)){
+      set.seed(seed)
+    }
 
     sl_fit <- SuperLearner(
       Y = train_data$tt,
@@ -72,7 +75,8 @@ fitting.Y <- function(train_data, valid_data,
                       ymodel,
                       Xnames,
                       Yfamily = "gaussian",
-                      SL_library = c("glm")
+                      SL_library = c("glm"),
+                      seed = NULL
 ) {
 
   # Y(1) -----
@@ -156,6 +160,9 @@ fitting.Y <- function(train_data, valid_data,
     y_valid_data <- valid_data
 
     # set.seed(9999)
+    if(!is.null(seed)){
+      set.seed(seed)
+    }
 
     SL_library <- SL_library
     sl_fit <- SuperLearner(
@@ -187,7 +194,8 @@ fitting.K <- function(train_data, valid_data,
                       kmodel = "K ~ t1 + X",
                       Xnames,
                       obs_weights = "obs_weights_Y",
-                      SL_libary = c("SL.multinom")
+                      SL_libary = c("SL.multinom"),
+                      seed = NULL
 ) {
 
   if (kmodel == "K ~ t1") {
@@ -213,7 +221,9 @@ fitting.K <- function(train_data, valid_data,
     cov_names <- c(Xnames)
 
     # set.seed(9999)
-
+    if(!is.null(seed)){
+      set.seed(seed)
+    }
     k_train_data <- train_data[train_data$tt==1, ]
 
     if( "SL.multinom"  %in% SL_libary ) {

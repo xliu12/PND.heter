@@ -174,7 +174,7 @@ eif.k <- function(v = 1,  #fold,
 
   # Fit models  -----------------
   if(!is.null(seed)){
-    set.seed(seed)
+    seed_nuisance <- seed - 2346
   }
   tmodel <- ifelse(omit.tt == TRUE, "tt ~ 1", "tt ~ X")
   kmodel <- ifelse(omit.k == TRUE, "K ~ t1", "K ~ t1 + X")
@@ -195,7 +195,8 @@ eif.k <- function(v = 1,  #fold,
       train_data = train_data, valid_data = valid_data,
       tmodel = tmodel,
       SL_library = c("SL.glm"),
-      Xnames = Xnames
+      Xnames = Xnames,
+      seed = seed_nuisance
     )
 
     y_out.kt1xw <- fitting.Y(
@@ -203,7 +204,8 @@ eif.k <- function(v = 1,  #fold,
       SL_library = c("SL.glm"),
       ymodel = y1model,
       Xnames = Xnames,
-      Yfamily = Yfamily
+      Yfamily = Yfamily,
+      seed = seed_nuisance
     )
 
     y_out.t0xw <- fitting.Y(
@@ -211,14 +213,16 @@ eif.k <- function(v = 1,  #fold,
       ymodel = y0model,
       SL_library = c("SL.glm"),
       Xnames = Xnames,
-      Yfamily = Yfamily
+      Yfamily = Yfamily,
+      seed = seed_nuisance
     )
 
     k_out.t1xw <- fitting.K(
       train_data = train_data, valid_data = valid_data,
       kmodel = kmodel,
       SL_libary = c("SL.multinom"),
-      Xnames = Xnames
+      Xnames = Xnames,
+      seed = seed_nuisance
     )
   }
 
@@ -230,7 +234,8 @@ eif.k <- function(v = 1,  #fold,
       train_data = train_data, valid_data = valid_data,
       tmodel = tmodel,
       SL_library = learners_tt,
-      Xnames = Xnames
+      Xnames = Xnames,
+      seed = seed_nuisance
     )
 
     y_out.kt1xw <- fitting.Y(
@@ -238,7 +243,8 @@ eif.k <- function(v = 1,  #fold,
       SL_library = learners_y,
       ymodel = y1model, #"Y ~ K + t1 + X",
       Xnames = Xnames,
-      Yfamily = Yfamily
+      Yfamily = Yfamily,
+      seed = seed_nuisance
     )
 
     y_out.t0xw <- fitting.Y(
@@ -246,14 +252,16 @@ eif.k <- function(v = 1,  #fold,
       ymodel = y0model, # "Y ~ t0 + X",
       SL_library = learners_y,
       Xnames = Xnames,
-      Yfamily = Yfamily
+      Yfamily = Yfamily,
+      seed = seed_nuisance
     )
 
     k_out.t1xw <- fitting.K(
       train_data = train_data, valid_data = valid_data,
       kmodel = kmodel,
       SL_libary = learners_k,
-      Xnames = Xnames
+      Xnames = Xnames,
+      seed = seed_nuisance
     )
 
   }
