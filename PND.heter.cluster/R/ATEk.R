@@ -173,7 +173,9 @@ eif.k <- function(v = 1,  #fold,
   }
 
   # Fit models  -----------------
-
+  if(!is.null(seed)){
+    set.seed(seed)
+  }
   tmodel <- ifelse(omit.tt == TRUE, "tt ~ 1", "tt ~ X")
   kmodel <- ifelse(omit.k == TRUE, "K ~ t1", "K ~ t1 + X")
 
@@ -223,6 +225,7 @@ eif.k <- function(v = 1,  #fold,
   # if use flexible regressions algorithms ----
 
   if (Fit != "lme") {
+
     t_out.x <- fitting.tt(
       train_data = train_data, valid_data = valid_data,
       tmodel = tmodel,
