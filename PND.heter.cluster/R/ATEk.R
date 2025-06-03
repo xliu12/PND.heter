@@ -87,7 +87,8 @@ atekCl <- function(data_in,
                    learners_k = c("SL.multinom"),
                    learners_y = c("SL.glm"),
                    sensitivity = NULL,
-                   cv_folds = 4L
+                   cv_folds = 4L,
+                   seed = NULL
 ) {
 
   data_in1 <- data_in %>%
@@ -95,7 +96,9 @@ atekCl <- function(data_in,
   data_in1$K[data_in1$tt==0] <- 0
   data_in1$K[data_in1$tt==1] <- match(data_in1$K[data_in1$tt==1], unique(data_in1$K[data_in1$tt==1]))
 
-  set.seed(12345)
+  if(!is.null(seed)){
+    set.seed(seed)
+  }
   crossfit_res <- suppressWarnings(
     cluster.specific.ate(
       cv_folds = cv_folds,
@@ -111,7 +114,8 @@ atekCl <- function(data_in,
       learners_k = learners_k,
       learners_y = learners_y,
       combination = NULL,
-      sensitivity = sensitivity
+      sensitivity = sensitivity,
+      seed = seed
     )
   )
 
@@ -142,7 +146,8 @@ eif.k <- function(v = 1,  #fold,
                   cv = TRUE,
                   learners_tt,
                   learners_k,
-                  learners_y
+                  learners_y,
+                  seed = NULL
 ) {
   # try with one of the folds
   # fold <- origami::make_folds(data_in, fold_fun = folds_vfold, V = 2)
@@ -428,7 +433,8 @@ cluster.specific.ate <- function(
     learners_k,
     learners_y,
     combination = NULL,
-    sensitivity = NULL
+    sensitivity = NULL,
+    seed = NULL
 ) {
 
   data_in$id <- 1:nrow(data_in)
@@ -450,7 +456,8 @@ cluster.specific.ate <- function(
                      cv = FALSE,
                      learners_tt = learners_tt,
                      learners_k = learners_k,
-                     learners_y = learners_y
+                     learners_y = learners_y,
+                     seed = seed
     )
     cv_components <- eif_out$tmle_components
   }
@@ -516,7 +523,8 @@ cluster.specific.ate <- function(
         cv = TRUE,
         learners_tt = learners_tt,
         learners_k = learners_k,
-        learners_y = learners_y
+        learners_y = learners_y,
+        seed = seed
       )
       eif <- rbind(eif, eif_out$tmle_components)
     }
@@ -646,7 +654,9 @@ cluster.specific.ate <- function(
 
   # Interval ------------------------
 
-  set.seed(12345)
+  if(!is.null(seed)){
+    set.seed(seed)
+  }
   ind_bootout <- boot::boot(data = cv_components,
                             statistic = fun.each.boot, data_in=data_in,
                             R = 1000,
@@ -672,7 +682,9 @@ cluster.specific.ate <- function(
 
   # sensitivity interval boot -------------
   if (length(sensitivity)>0) {
-    set.seed(12345)
+    if(!is.null(seed)){
+      set.seed(seed)
+    }
 
     boot_sens_results <- list()
     for (s in 1:length(dk_list)) {

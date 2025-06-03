@@ -38,7 +38,7 @@ balance <- function(
     covariate_names = "X_dat.1",
     ttname, Kname
 ){
-  set.seed(124)
+  # set.seed(124)
 
   cv_components <- atekCl_results$cv_components
 

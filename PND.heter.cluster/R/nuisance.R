@@ -39,7 +39,7 @@ fitting.tt <- function(train_data, valid_data,
       cov_names <- c(Xnames)
     }
 
-    set.seed(9999)
+    # set.seed(9999)
 
     sl_fit <- SuperLearner(
       Y = train_data$tt,
@@ -155,7 +155,7 @@ fitting.Y <- function(train_data, valid_data,
     y_train_data <- train_data[train_data$tt==0, ]
     y_valid_data <- valid_data
 
-    set.seed(9999)
+    # set.seed(9999)
 
     SL_library <- SL_library
     sl_fit <- SuperLearner(
@@ -212,7 +212,7 @@ fitting.K <- function(train_data, valid_data,
   if (kmodel == "K ~ t1 + X"){
     cov_names <- c(Xnames)
 
-    set.seed(9999)
+    # set.seed(9999)
 
     k_train_data <- train_data[train_data$tt==1, ]
 

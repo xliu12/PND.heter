@@ -15,7 +15,8 @@ atekCl(
   learners_k = c("SL.multinom"),
   learners_y = c("SL.glm"),
   sensitivity = NULL,
-  cv_folds = 4L
+  cv_folds = 4L,
+  seed = NULL
 )
 }
 \arguments{
